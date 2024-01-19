@@ -1,17 +1,16 @@
-function lapattervezes_v12_direct_1par
+function lapattervezes_v12_direct_abrahoz
 
 clear all, close all
 
 global OPT_DEC_VAR 
 
-Q_target=2100/3600; H_target=18;
-n=9000; g=9.81;
+Q_target=170/3600; H_target=87;
+n=1450; g=9.81;
 
 N_lapat=5; N_r=40; % min 4!!!
 
 nq=n*Q_target^0.5/H_target^0.75; psi=(300/(300+nq))^(9/4);
-u2=sqrt(2*g*H_target/psi); D2=u2/(pi*n/60)
-Db=D2*0.4;
+u2=sqrt(2*g*H_target/psi); D2=u2/(pi*n/60); Db=D2*0.4;
 omega=2*pi*n/60;
 u1=Db*pi*n/60; u2=D2*pi*n/60;
 geo.u2=u2;
@@ -19,12 +18,12 @@ epszilon=0.0188*nq^(2/3); c1=epszilon*sqrt(2*g*H_target);
 beta1=atan(c1/u1);
 c2u=H_target*g/u2; c2m=0.1011*sqrt(2*g*H_target);
 geo.beta2=atan(c2m/(u2-c2u));
-b2=Q_target/(D2*pi*c2m)
+b2=Q_target/(D2*pi*c2m);
 b1=Q_target/(Db*pi*c1);
 
 %% Set desired operating point
-%dx= 0.2; coeff_max=0.3; fname_prefix='jk_0p8';
-dx= 0.0; coeff_max=0.3; fname_prefix='jk_1p0';
+dx= 0.2; coeff_max=0.35; fname_prefix='jk_0p8';
+%dx= 0.0; coeff_max=0.3; fname_prefix='jk_1p0';
 %dx=-0.2; coeff_max=0.3; fname_prefix='jk_1p2';
 
 Q_target=(1-dx)*170/3600;
@@ -59,6 +58,7 @@ end
 xx(idx)
 geo.x=xx(idx);
 plot(xx,ff,'-',xx(idx),ff(idx),'o')
+xlabel('A'), ylabel('(H-H_k)^2')
 
 %% Save the best 
 geo.C_type='elliptic';
@@ -98,7 +98,7 @@ switch OPT_DEC_VAR
 end
 end
 
-function [out,geo]=obj(x,geo,f)
+function [out,geo]=obj(x,geo,DO_PLOT)
 
 C=get_C(x,geo);
 
@@ -114,6 +114,12 @@ while (delta_d_phi>0.01) && (iter<ITER_MAX)
         'AbsTol',1e-5);
     [ts,xsys,te,xe,ie]=ode45(@(t,z) streamlineode(t,z,C,geo),...
         [0 tmax],[geo.Db/2*cos(alpha);geo.Db/2*sin(alpha)],ode_options); %DE megoldó
+
+%     figure(100)
+%                    subplot(2,3,iter)
+%     plot(geo.x_g, geo.y_g,'k',xsys(:,1),xsys(:,2),'r')
+%     title([num2str(iter),'. iteráció',])
+% pause
 
     if length(ie)<geo.N_r
         fprintf('\n\n !!!!!!!!!!\n Last step: %g, tmax=%g\n',ts(end),tmax);
@@ -135,10 +141,11 @@ while (delta_d_phi>0.01) && (iter<ITER_MAX)
                 warning('!!!!!!!!!!\n dr not found, replacing by 15 degrees');
                 ie'
 
-                figure(100)
+                figure(100)                
                 plot(geo.x_g, geo.y_g,'k',xsys(:,1),xsys(:,2),'r')
+               
                 
-                %pause
+                pause
             else
                 phi(ii)=atan2(xe(idx,2),xe(idx,1));
                 if (phi(ii)<0)
@@ -155,17 +162,18 @@ while (delta_d_phi>0.01) && (iter<ITER_MAX)
         [QQ,HH,veldata,geo]=jk_kompl_pot(C,geo,DO_PLOT);
 
         err1=(geo.H_target-HH)^2;
-        err2=std(veldata.c_k_u_vec);
+        err2=0*std(veldata.c_k_u_vec);
     end
     fprintf('\n\t iter #%d, norm(d_phi change) = %5.3e',iter,delta_d_phi);
 
     iter=iter+1;
 
-    figure(100)
-    plot(geo.x_g, geo.y_g,'k',xsys(:,1),xsys(:,2),'r')
-    title(['Q=',num2str(round(QQ*3600)),...
-        'm3/h, H=',num2str(round(10*HH)/10),'m, iter #',num2str(iter)])
-
+%     figure(100)
+%                    subplot(2,2,iter)
+%     plot(geo.x_g, geo.y_g,'k',xsys(:,1),xsys(:,2),'r')
+%     title(['Q=',num2str(round(QQ*3600)),...
+%         'm3/h, H=',num2str(round(10*HH)/10),'m, iter #',num2str(iter)])
+% pause
 if iter==ITER_MAX
     warning("Blade iteration not converging!");
     pause
