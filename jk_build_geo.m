@@ -1,7 +1,8 @@
-function geo=jk_build_geo2(geo)
+function geo=jk_build_geo(geo)
 
 N_r=length(geo.d_phi)+1;
 
+%angle of points in the global coordinate system
 phi(1)=0;
 for ii=1:N_r-1
     phi(ii+1)=phi(ii)+geo.d_phi(ii);
@@ -10,7 +11,7 @@ end
 r_b=geo.Db/2;
 r_k=geo.D2/2;
 
-% x_g,y_g -> geometria
+% x_g,y_g -> coordinates od geometry points
 for jj=1:geo.N_lapat
     for ii=1:N_r
         geo.x_g(ii,jj)=(r_b+(r_k-r_b)*(ii-1)/(N_r-1))*cos(phi(ii)+(jj-1)*2*pi/geo.N_lapat);
@@ -18,17 +19,19 @@ for jj=1:geo.N_lapat
     end
 end
 
+%
 geo.t_arclength(1)=0;
 for ii=1:N_r-1
     geo.t_arclength(ii+1)=geo.t_arclength(ii)+...
         norm([geo.x_g(ii+1,1)-geo.x_g(ii,1) geo.y_g(ii+1,1)-geo.y_g(ii,1)]);
 end
 
-% x_c,y_c -> cirkulaciok helye
+% x_c,y_c -> coordinates of circulation and source/sink points
 for jj=1:geo.N_lapat
     for ii=1:geo.N_r-1
         geo.x_c(ii,jj)=(geo.x_g(ii,jj)+geo.x_g(ii+1,jj))/2;
         geo.y_c(ii,jj)=(geo.y_g(ii,jj)+geo.y_g(ii+1,jj))/2;
+        % Calculating the locations of the circulations by arclength
         if ii==1
             geo.loc_c(1)=norm([geo.x_c(1,1)-geo.x_g(1,1), geo.y_c(1,1)-geo.y_g(1,1)]);
         else
@@ -41,8 +44,9 @@ end
 % x_v,y_v -> sebessegek kiertekelesenek a helyei
 % tmp=linspace(0,geo.t_arclength(end),geo.N_r-1);
 
-geo.x_v=geo.x_g(:,1);%(2:end,1);
-geo.y_v=geo.y_g(:,1);%(2:end,1);
+% velocity points (the first collumn of geometry points - only one blade)
+geo.x_v=geo.x_g(:,1);
+geo.y_v=geo.y_g(:,1);
 
 for ii=1:length(geo.x_v)
     if ii==1
