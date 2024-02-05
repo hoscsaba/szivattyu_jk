@@ -2,8 +2,8 @@ function lapattervezes_v14
 clear all, close all
 
 %% Main inputs
-Q_target=170/3600; H_target=87;
-n=1450; g=9.81;
+Q_target=30/1000; H_target=50;
+n=1440; g=9.81;
 N_lapat=5; N_r=40; % min 4!!!
 fname_prefix='jk_1';
 
@@ -40,19 +40,20 @@ geo.d_phi=pi*ones(1,N_r-1)/(N_r+1);
 geo=jk_build_geo(geo);
 
 %% Run computation
-[ff,geo]=obj(0.2,geo,0);
-
-geo=jk_postprocess(geo);
+%Percentages of H/Q
+A_C=0.07;
+A_S=0.005;
+[ff,geo]=obj(A_C,A_S,geo,0);
 
 % fname=[fname_prefix,'_Q_',num2str(round(Q_target*3600)),'m3ph_H_',...
 %     num2str(round(geo.H_target)),'m.mat']
 % save(fname,"geo");
 
 % geo.N_r-1
-
 end
-%% Calculating the circulation
-function C=get_C(A,xi)
+%% Defining the circulation
+function C=get_C(A_C,xi,geo)
+Int_C=0;
 for i=1:length(xi)
     % xi=geo.loc_c(i)/geo.t_arclength(end);
     %C(i)=0.37;
@@ -61,43 +62,60 @@ for i=1:length(xi)
     % Parabolikus
     %C(i)=polyval(x,xi)*xi*(1-xi);
     %Elliptikus
+    C(i)=0;
     if xi(i)<0.5
-        C(i)=A*sin(acos(1-2*xi(i)));
+        C(i)=A_C*sin(acos(1-2*xi(i)));
     else
-        C(i)=A*sin(acos(2*xi(i)-1));
+        C(i)=A_C*sin(acos(2*xi(i)-1));
     end
+    if i==1
+    Int_C=Int_C+C(i)*(xi(i));
+    else
+    Int_C=Int_C+C(i)*(xi(i)-xi(i-1));
+    end
+    
 end
 end
 
-%% Calculating the sources
-function S=get_S(A,xi)
+%% Defining the sources
+function S=get_S(A_S,xi,geo)
+Int_S=0;
+
 for i=1:length(xi)
+    S(i)=0;
     %xi=geo.loc_c(i)/geo.t_arclength(end);
     if xi(i)<0.3
-        S(i)=-4*sqrt(xi(i))*(0.33-xi(i))^2;
+        S(i)=sqrt(xi(i))*(0.33-xi(i))^2;
+        if i==1
+            Int_S=Int_S+S(i)*(xi(i));
+        else
+            Int_S=Int_S+S(i)*(xi(i)-xi(i-1));
+        end
     elseif xi(i)>1-0.3
-        S(i)=4*sqrt(-xi(i)+1)*(0.33-1+xi(i))^2;
+        S(i)=-sqrt(-xi(i)+1)*(0.33-1+xi(i))^2;
     else
         S(i)=0;
     end
-    % pxi(i)=xi;
 end
+A=A_S*geo.Q_target/Int_S/geo.N_lapat/geo.b2/geo.t_arclength(end);
+S=S*A;
+%S=S/4.1985e3*4.1985e3
+%Int_S*geo.N_lapat*geo.b2*geo.t_arclength(end)
+%geo.Q_target
 % figure(124)
 % plot(pxi,S)
 end
 
-%% Error function
-function [out,geo]=obj(A,geo,DO_PLOT)
-
+%% Iteration
+function [out,geo]=obj(A_C,A_S,geo,DO_PLOT)
 xi=geo.loc_c/geo.t_arclength(end);
-C=get_C(A,xi);
-S=get_S(A,xi);
 
 delta_d_phi=1e5;
 iter=1;
-ITER_MAX=20;
+ITER_MAX=50;
 while (delta_d_phi>0.01) && (iter<ITER_MAX)
-
+    C=get_C(A_C,xi,geo);
+    S=get_S(A_S,xi,geo);
     d_phi_old=geo.d_phi;
     alpha=2*pi/geo.N_lapat/2;
     tmax=0.1;
@@ -153,9 +171,10 @@ while (delta_d_phi>0.01) && (iter<ITER_MAX)
         [QQ,HH,veldata,geo]=jk_kompl_pot(C,S,geo,DO_PLOT);
         geo.QQ=QQ;
         geo.HH=HH;
+        geo.veldata=veldata;
 
         err1=(geo.H_target-HH)^2;
-        err2=0*std(veldata.c_k_u_vec);
+        err2=0*std(geo.veldata.c_k_u_vec);
     end
     fprintf('\n\t iter #%d, norm(d_phi change) = %5.3e',iter,delta_d_phi);
 
@@ -172,25 +191,27 @@ if iter==ITER_MAX
     pause
 end
 end
-% fprintf('\n Q=%5.1f m3/h, H=%5.1f / %5.1f m, err=[ %5.3f, %5.3f], x=[',...
-%     QQ*3600,geo.H_target,HH,err1,err2);
-% for ii=1:length(x)
-%     fprintf(' %5.3f ',x(ii));
-% end
-% fprintf("]")
 
-out=err1+err2;
-geo.C=get_C(0.2,xi);
-geo.S=get_S(0.2,xi);
+out=0*err1+5*err2;
+geo.C=get_C(A_C,xi,geo);
+geo.S=get_S(A_S,xi,geo);
         figure(100)
         subplot(2,3,[1,2,4,5])
         plot(geo.x_g, geo.y_g,'k',xsys(:,1),xsys(:,2),'r')
         subplot(2,3,3)
-        xx=linspace(0,1)
-        plot(xx,get_C(0.2,xx))
+        xx=linspace(0,1);
+        plot(xx,get_C(A_C,xx,geo))
         subplot(2,3,6)
-        plot(xx,get_S(0.2,xx))
+        plot(xx,get_S(A_S,xx,geo))
+
+%% Send the geometry to postprocessing
+geo=jk_postprocess(geo);
+geo
+
 end
+
+
+
 
 function [val,ter,dir]=streamlineevent(t,z,C,S,geo)
 

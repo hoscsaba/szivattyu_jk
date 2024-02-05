@@ -8,6 +8,8 @@ y(ii)=xnegyzet(x(ii),xv,xvv,xt);
 end
 plot(x,y);
 
+fun = @(x) exp(-x.^2).*log(x).^2;
+q = integral(fun,0,Inf)
 
 function y=xnegyzet(x,xv,xvv,xt);
 if x<xv
