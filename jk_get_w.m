@@ -8,13 +8,13 @@ for i=1:length(xy(:,1))
     end
     r(i)=norm(z);
     tmp=jk_vel(z,geo.C,geo.S,geo);
-    cx=tmp.u; cy=tmp.v;
-    c_v=[cx;cy];
-    c(i)=norm(c_v);
+    wx=tmp.u; wy=tmp.v;
+    w_v=[wx;wy];
+    w(i)=norm(w_v);
     fi=angle(z); n=[-sin(fi); cos(fi)];
     u_v=norm(z)*geo.omega*n;
     u(i)=norm(u_v);
-    w(i)=norm(c_v-u_v);
+    c(i)=norm(w_v+u_v);
 
     if i==1
         w1=w(i); u1=u(i);

@@ -65,7 +65,7 @@ function circ_test
     %axis equal
     title(["N_r=",num2str(geo.N_r),", sum(C)=",num2str(sum(geo.C))]);
     subplot(2,1,2)
-    plot(C);
+    plot(C,'-o');
 drawnow
     geo.N_r=geo.N_r*2;
   end

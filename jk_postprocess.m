@@ -247,7 +247,7 @@ function geo=jk_postprocess(geo)
     r_b=geo.Db/2;
     r_k=geo.D2/2;
 
-    ode_options=odeset('Events',@(t,z) jk_streamlineevent(t,z,geo.C,geo.S,geo));
+    ode_options=odeset('Events',@(t,z) jk_streamlineevent2(t,z,geo.C,geo.S,geo));
     alpha=-27*pi/180;
     [t_s,xsys_s,te,xe,ie]=ode45(@(t,z) jk_streamlineode(t,z,geo.C,geo.S,geo),...
         [0 0.05],[0.5*r_b*cos(alpha);0.5*r_b*sin(alpha)],ode_options); %DE megoldó
@@ -262,7 +262,7 @@ function geo=jk_postprocess(geo)
     [s_n,r_n,w_n,p_n,p_cp]=jk_get_w(xsys_n,geo);
 
     fi_ini=pi*linspace(0,360,100)/180;
-    ode_options=odeset('Events',@(t,z) jk_streamlineevent(t,z,geo.C,geo.S,geo));
+    ode_options=odeset('Events',@(t,z) jk_streamlineevent2(t,z,geo.C,geo.S,geo));
     for ii=1:length(fi_ini)
         xini=0.8*r_b*cos(fi_ini(ii));
         yini=0.8*r_b*sin(fi_ini(ii));
@@ -281,19 +281,10 @@ function geo=jk_postprocess(geo)
     xlim([1,max(2*r_s/geo.Db)])
     xlabel('r/D_1'), ylabel('w/u_2'), legend('szívott oldal','nyomott oldal')
 
-    % u_n=r_s*geo.omega;
-    % u_s=r_n*geo.omega;
-    % plot(2*r_s/geo.Db,w_s./u_n,'r'), hold on
-    % plot(2*r_n/geo.Db,w_n./u_s,'b')
-    % xlim([1,max(2*r_s/geo.Db)])
-
     subplot(2,2,4)
-% 
-% 
-%     %figure(6)
-%     plot(s_s,p_s,'r'), hold on
-%     plot(s_n,p_n,'b')
-%     xlabel('Áramvonal ívhossz'), ylabel('p'), legend('szívott oldal','nyomott oldal')
+    plot(s_s,p_s,'r'), hold on
+    plot(s_n,p_n,'b')
+    xlabel('Áramvonal ívhossz'), ylabel('p'), legend('szívott oldal','nyomott oldal')
 % end
 % 
 % %% Interpolacio
@@ -306,64 +297,6 @@ function geo=jk_postprocess(geo)
 % geo.dp=ppn-pps;
 % geo.pcp=pcp;
 % 
-% end
-% 
-% function [s,r,w,p,p_cp]=get_w(x,geo)
-% s(1)=0;
-% for i=1:length(x(:,1))
-%     z=x(i,1)+1i*x(i,2);
-%     if i>1
-%         dz=[x(i,1)-x(i-1,1), x(i,2)-x(i-1,2)];
-%         s(i)=s(i-1)+norm(dz);
-%     end
-%     r(i)=norm(z);
-%     tmp=jk_vel(z,geo.C,geo);
-%     wx=tmp.u; wy=tmp.v;
-%     w_v=[wx;wy];
-%     w(i)=norm(w_v);
-%     fi=angle(z); n=[-sin(fi); cos(fi)];
-%     u_v=norm(z)*geo.omega*n;
-%     u(i)=norm(u_v);
-%     c(i)=norm(w_v+u_v);
-%     % cx=tmp.u; cy=tmp.v;
-%     % c_v=[cx;cy];
-%     % c(i)=norm(c_v);
-%     % fi=angle(z); n=[sin(fi); -cos(fi)];
-%     % u_v=norm(z)*geo.omega*n;
-%     % u(i)=norm(u_v);
-%     % w(i)=norm(c_v-u_v);
-% 
-%     if i==1
-%         w1=w(i); u1=u(i);
-%     end
-%     p(i)=geo.rho * ( (w1^2-w(i)^2)/2-(u1^2-u(i)^2)/2);
-% 
-%     tx=tmp.u;
-%     ty=tmp.v;
-%     n_v=[-ty;tx]/norm([tx ty]);
-% 
-%     % F_cp=m*r*omega^2, m=h*b2*ds*rho, p_cp=F_cp/(b2*ds)=rho*h*r*omega^2
-%     t_z_x=real(z);
-%     t_z_y=imag(z);
-%     v_cp=[t_z_x;t_z_y]/norm(z);
-%     p_cp_v=geo.rho_lapat*geo.h_lapat*r(i)*(geo.omega)^2*v_cp;
-% 
-%     p_cp(i)=dot(p_cp_v,n_v);
-% 
-%     %fprintf('\n D/D1=%5.3f, c=%5.3f, u=%5.3f, p=%5.3f vom',r(i)/(geo.Db/2),norm(c),norm(u_v),p(i)/9.81/geo.rho);
-% end
-% 
-% end
-% 
-% function dydx=streamlineode(t,z,C,geo)
-% tmp=jk_vel(z(1)+1i*z(2),C,geo);
-% dydx=[tmp.u;tmp.v];
-% end
-% 
-% function [val,ter,dir]=streamlineevent(t,z,C,geo)
-% val=norm(z)-geo.D2/2;
-% ter=1;
-% dir=0;
-% end
+
     
 end
