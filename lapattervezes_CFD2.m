@@ -1,4 +1,4 @@
-function lapattervezes_v13
+function lapattervezes_CFD2
   clear all, close all
 
   %% Main inputs
@@ -48,7 +48,7 @@ function lapattervezes_v13
 
   %% Run a series of computations
   [ff,geo]=obj(0.15,geo,0);
-
+geo
   save_to_CFX(geo);
 
 end
