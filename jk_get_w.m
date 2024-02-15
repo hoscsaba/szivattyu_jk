@@ -32,7 +32,6 @@ for i=1:length(xy(:,1))
     p_cp_v=7860*0.05*r(i)*(geo.omega)^2*v_cp;
 
     p_cp(i)=dot(p_cp_v,n_v);
-    w
 
     %fprintf('\n D/D1=%5.3f, c=%5.3f, u=%5.3f, p=%5.3f vom',r(i)/(geo.Db/2),norm(c),norm(u_v),p(i)/9.81/geo.rho);
 end

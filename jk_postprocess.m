@@ -253,7 +253,7 @@ function geo=jk_postprocess(geo)
         [0 0.05],[0.5*r_b*cos(alpha);0.5*r_b*sin(alpha)],ode_options); %DE megoldó
     plot(xsys_s(:,1),xsys_s(:,2),'r','LineWidth',2);
 
-    alpha=-36*pi/180;
+    alpha=-39*pi/180;
     [t_n,xsys_n,te,xe,ie]=ode45(@(t,z) jk_streamlineode(t,z,geo.C,geo.S,geo),...
         [0 0.05],[0.5*r_b*cos(alpha);0.5*r_b*sin(alpha)],ode_options); %DE megoldó
     plot(xsys_n(:,1),xsys_n(:,2),'g','LineWidth',2);
@@ -272,6 +272,19 @@ function geo=jk_postprocess(geo)
         plot(xsys(:,1),xsys(:,2),'b');
     end
 
+
+
+    %% Interpolacio
+    l=linspace(0,geo.t_arclength(end),101);
+    w_s_ip=interp1(s_s,w_s,l);
+    w_n_ip=interp1(s_n,w_n,l);
+    delta_w_ip=w_s_ip-w_n_ip;
+
+    %Gamma_lapat_testing=trapz(l,delta_w_ip)
+
+
+    %Gamma_lapat_testing=Gamma_lapat_testing*geo.t_arclength(end)/100
+
     hold off
 
     subplot(2,2,2)
@@ -285,7 +298,7 @@ function geo=jk_postprocess(geo)
     plot(s_s,p_s,'r'), hold on
     plot(s_n,p_n,'b')
     xlabel('Áramvonal ívhossz'), ylabel('p'), legend('szívott oldal','nyomott oldal')
-% end
+    
 % 
 % %% Interpolacio
 % xx1=linspace(0,1);
