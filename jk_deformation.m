@@ -1,4 +1,4 @@
-function jk_lapat_deformacio
+function jk_deformation
 clear all, close all
 
 global L a EI geo w_lapat
