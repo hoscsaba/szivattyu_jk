@@ -2,7 +2,7 @@ function lapattervezes_v14
 clear all, close all
 
 %% Main inputs
-Q_target=30/1000; H_target=50;
+Q_target=30/1000; H_target=40;
 n=1440; g=9.81;
 N_lapat=5; N_r=40; % min 4!!!
 fname_prefix='jk_1';
@@ -41,8 +41,8 @@ geo=jk_build_geo(geo);
 
 %% Run computation
 %Percentages of H/Q
-A_C=0.07;
-A_S=0.005;
+A_C=0.11;
+A_S=0*0.0033e-4;
 [ff,geo]=obj(A_C,A_S,geo,0);
 
 % fname=[fname_prefix,'_Q_',num2str(round(Q_target*3600)),'m3ph_H_',...
@@ -64,17 +64,20 @@ for i=1:length(xi)
     %Elliptikus
     C(i)=0;
     if xi(i)<0.5
-        C(i)=A_C*sin(acos(1-2*xi(i)));
+        C(i)=sin(acos(1-2*xi(i)));
     else
-        C(i)=A_C*sin(acos(2*xi(i)-1));
+        C(i)=sin(acos(2*xi(i)-1));
     end
     if i==1
     Int_C=Int_C+C(i)*(xi(i));
     else
     Int_C=Int_C+C(i)*(xi(i)-xi(i-1));
     end
-    
 end
+%Gamma_r=Int_C*geo.t_arclength(end)*A_C/geo.b2
+%Gamma_r/geo.Gamma_lapat_elm
+%A=9.81*geo.H_target*2*pi*geo.b2/geo.N_lapat/geo.omega/geo.t_arclength(end)/Int_C
+C=A_C*C;
 end
 
 %% Defining the sources
@@ -168,7 +171,7 @@ while (delta_d_phi>0.01) && (iter<ITER_MAX)
 
         %DO_PLOT=1;
 
-        [QQ,HH,veldata,geo]=jk_kompl_pot(C,S,geo,DO_PLOT);
+        [QQ,HH,veldata,geo]=jk_main_get_QH(C,S,geo,DO_PLOT);
         geo.QQ=QQ;
         geo.HH=HH;
         geo.veldata=veldata;
@@ -206,7 +209,8 @@ geo.S=get_S(A_S,xi,geo);
 
 %% Send the geometry to postprocessing
 geo=jk_postprocess(geo);
-geo
+%save_to_CFX(geo)
+geo.t_arclength(end)
 
 end
 

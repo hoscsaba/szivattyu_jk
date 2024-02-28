@@ -248,14 +248,14 @@ function geo=jk_postprocess(geo)
     r_k=geo.D2/2;
 
     ode_options=odeset('Events',@(t,z) jk_streamlineevent2(t,z,geo.C,geo.S,geo));
-    alpha=-27*pi/180;
-    [t_s,xsys_s,te,xe,ie]=ode45(@(t,z) jk_streamlineode(t,z,geo.C,geo.S,geo),...
-        [0 0.05],[0.5*r_b*cos(alpha);0.5*r_b*sin(alpha)],ode_options); %DE megoldó
+    alpha=30*pi/180;
+    [t_s,xsys_s,tes,xes,ies]=ode45(@(t,z) jk_streamlineode(t,z,geo.C,geo.S,geo),...
+        [0 0.05],[r_b*cos(alpha);r_b*sin(alpha)],ode_options); %DE megoldó
     plot(xsys_s(:,1),xsys_s(:,2),'r','LineWidth',2);
 
-    alpha=-39*pi/180;
-    [t_n,xsys_n,te,xe,ie]=ode45(@(t,z) jk_streamlineode(t,z,geo.C,geo.S,geo),...
-        [0 0.05],[0.5*r_b*cos(alpha);0.5*r_b*sin(alpha)],ode_options); %DE megoldó
+    alpha=-30*pi/180;
+    [t_n,xsys_n,ten,xen,ien]=ode45(@(t,z) jk_streamlineode(t,z,geo.C,geo.S,geo),...
+        [0 0.05],[r_b*cos(alpha);r_b*sin(alpha)],ode_options); %DE megoldó
     plot(xsys_n(:,1),xsys_n(:,2),'g','LineWidth',2);
 
     [s_s,r_s,w_s,p_s,p_cp]=jk_get_w(xsys_s,geo);
@@ -264,8 +264,8 @@ function geo=jk_postprocess(geo)
     fi_ini=pi*linspace(0,360,100)/180;
     ode_options=odeset('Events',@(t,z) jk_streamlineevent2(t,z,geo.C,geo.S,geo));
     for ii=1:length(fi_ini)
-        xini=0.8*r_b*cos(fi_ini(ii));
-        yini=0.8*r_b*sin(fi_ini(ii));
+        xini=r_b*cos(fi_ini(ii));
+        yini=r_b*sin(fi_ini(ii));
         [ts,xsys]=ode45(@(t,z) jk_streamlineode(t,z,geo.C,geo.S,geo),...
             [0 0.05],[xini;yini],ode_options); %DE megoldó
 
@@ -275,10 +275,10 @@ function geo=jk_postprocess(geo)
 
 
     %% Interpolacio
-    l=linspace(0,geo.t_arclength(end),101);
-    w_s_ip=interp1(s_s,w_s,l);
-    w_n_ip=interp1(s_n,w_n,l);
-    delta_w_ip=w_s_ip-w_n_ip;
+    % l=linspace(0,geo.t_arclength(end),101);
+    % w_s_ip=interp1(s_s,w_s,l);
+    % w_n_ip=interp1(s_n,w_n,l);
+    % delta_w_ip=w_s_ip-w_n_ip;
 
     %Gamma_lapat_testing=trapz(l,delta_w_ip)
 

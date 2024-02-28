@@ -1,4 +1,4 @@
-function save_to_CFD(geo)
+function save_to_CFX(geo)
 
     fp=fopen("jk_A.rtzt", "w"); % Mentés Meanline Data File Format-ba
 
