@@ -243,6 +243,7 @@ function geo=jk_postprocess(geo)
     figure(5)
     subplot(2,2,[1,3])
     plot(geo.x_g,geo.y_g,'k','LineWidth',1)
+    axis('equal')
     hold on
     r_b=geo.Db/2;
     r_k=geo.D2/2;
@@ -298,13 +299,55 @@ function geo=jk_postprocess(geo)
     plot(s_s,p_s,'r'), hold on
     plot(s_n,p_n,'b')
     xlabel('Áramvonal ívhossz'), ylabel('p'), legend('szívott oldal','nyomott oldal')
-    
 % 
-% %% Interpolacio
-% xx1=linspace(0,1);
-% pps=interp1(s_s/s_s(end),p_s,xx1);
-% ppn=interp1(s_n/s_n(end),p_n,xx1);
-% pcp=interp1(s_n/s_n(end),p_cp,xx1);
+%% Interpolacio
+xxp=linspace(0,1);
+pps=interp1(s_s/s_s(end),p_s,xxp);
+ppn=interp1(s_n/s_n(end),p_n,xxp);
+
+deltap=ppn-pps;
+% figure(42)
+% plot(xxp,deltap);
+% hold on
+%pcp=interp1(s_n/s_n(end),p_cp,xx1);
+
+tx1 = readmatrix('tx1.txt');
+tp1 = readmatrix('tp1.txt');
+tx2 =  readmatrix('tx2.txt');
+tx2=tx2(end:-1:1);
+tp2 = readmatrix('tp2.txt');
+tp2=tp2(end:-1:1);
+
+ppst=interp1(tx1,tp1,xxp);
+ppnt=interp1(tx2,tp2,xxp);
+
+deltapt=ppnt-ppst;
+% plot(xxp,deltapt);
+
+% figure(200)
+% plot(xxp,ppst)
+% hold on
+% plot(xxp,ppnt)
+% plot(xxp,ppnt-ppst)
+
+
+
+figure(201)
+plot(xxp,pps-ppn(end),'r','LineWidth',2)
+hold on
+plot(xxp,ppst-ppnt(end-1),'r--','LineWidth',2)
+hold on
+plot(xxp,ppn-ppn(end),'b','LineWidth',2)
+hold on
+plot(xxp,ppnt-ppnt(end-1),'b--','LineWidth',2)
+xlabel('Áramvonal ívhossz'), ylabel('p'), ...
+    legend('Szívott oldal analitikus','Szívott oldal numerikus',...
+    'Nyomott oldal analitikus','Nyomott oldal numerikus')
+set(gca,'fontsize',14)
+
+
+
+
 % 
 % geo.x_dp=xx1;
 % geo.dp=ppn-pps;

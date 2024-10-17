@@ -2,7 +2,7 @@ function save_to_CFX(geo)
 
     fp=fopen("jk_A.rtzt", "w"); % Mentés Meanline Data File Format-ba
 
-    w=0.5; % lapátvastagság
+    w=3; % lapátvastagság
     LEmeshExt = 0.5; % Háló hosszabításának aránya radiális irányban a belépő élnél
     TEmeshExt = 0.2; % Háló hosszabításának aránya radiális irányban a kilépő élnél
     slices = 5; % rétegek száma b2 hosszon

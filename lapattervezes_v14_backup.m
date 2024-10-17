@@ -1,16 +1,18 @@
-function lapattervezes_v14
+function lapattervezes_v14_backup
 clear all, close all
 
 %% Main inputs
-Q_target=30/1000; H_target=40;
-n=1440; g=9.81;
-N_lapat=5; N_r=40; % min 4!!!
+Q_target=3/1000; H_target=20;
+n=2600; g=9.81;
+N_lapat=6; N_r=10; % min 4!!!
 fname_prefix='jk_1';
 
 %% Calculating the main parameters of the pump
-nq=n*Q_target^0.5/H_target^0.75; psi=(300/(300+nq))^(9/4);
+nq=n*Q_target^0.5/H_target^0.75; 
+psi=(300/(270+nq))^(9/4)
 nq
-u2=sqrt(2*g*H_target/psi); D2=u2/(pi*n/60)
+u2=sqrt(2*g*H_target/psi)
+D2=u2/(pi*n/60)
 Db=D2*0.4
 omega=2*pi*n/60;
 u1=Db*pi*n/60; u2=D2*pi*n/60;
@@ -123,7 +125,7 @@ while (delta_d_phi>0.01) && (iter<ITER_MAX)
     S=get_S(A_S,xi,geo);
     d_phi_old=geo.d_phi;
     alpha=2*pi/geo.N_lapat/2;
-    tmax=0.1;
+    tmax=0.05;
     ode_options=odeset('Events',@(t,z) streamlineevent(t,z,C,S,geo),...
         'AbsTol',1e-5);
     [ts,xsys,te,xe,ie]=ode45(@(t,z) jk_streamlineode(t,z,C,S,geo),...

@@ -1,26 +1,30 @@
-function lapattervezes_v14
+function lapattervezes_v15
 clear all, close all
 
 %% Main inputs
-Q_target=30/1000; H_target=40;
-n=1440; g=9.81;
+Q_target=3/1000; H_target=20;
+n=1450; g=9.81;
 N_lapat=5; N_r=40; % min 4!!!
 fname_prefix='jk_1';
 
 %% Calculating the main parameters of the pump
-nq=n*Q_target^0.5/H_target^0.75; psi=(300/(300+nq))^(9/4);
-nq
-u2=sqrt(2*g*H_target/psi); D2=u2/(pi*n/60)
+nq=n*Q_target^0.5/H_target^0.75; 
+psi=(300/(270+nq))^(9/4);
+nq;
+u2=sqrt(2*g*H_target/psi);
+D2=u2/(pi*n/60);
 Db=D2*0.4
-omega=2*pi*n/60;
+omega=2*pi*n/60
 u1=Db*pi*n/60; u2=D2*pi*n/60;
 geo.u2=u2;
 epszilon=0.0188*nq^(2/3); c1=epszilon*sqrt(2*g*H_target);
 beta1=atan(c1/u1);
-c2u=H_target*g/u2; c2m=0.1011*sqrt(2*g*H_target);
-geo.beta2=atan(c2m/(u2-c2u))
-b2=Q_target/(D2*pi*c2m)
-b1=Q_target/(Db*pi*c1);
+k2m=0.06+0.00195*nq;
+c2u=H_target*g/u2; c2m=k2m*sqrt(2*g*H_target);
+geo.beta2=atan(c2m/(u2-c2u));
+b2=Q_target/(D2*pi*c2m);
+%b2=0.01
+%b1=Q_target/(Db*pi*c1);
 
 
 
@@ -41,17 +45,39 @@ geo.Gamma_lapat_elm=9.81*H_target*2*pi/N_lapat/omega;
 geo.d_phi=pi*ones(1,N_r-1)/(N_r+1);
 geo=jk_build_geo(geo);
 
-%% Run computation
+%% Run a series of computations
 %Percentages of H/Q
-A_C=0.11;
-A_S=0*0.0033e-4;
+iterv_A=0;           %A_C initialization
+iterv_i=1;              %running index
+while iterv_A<6
+A_C=iterv_A/(N_r);
+A_S=0.0033e-4;
 [ff,geo]=obj(A_C,A_S,geo,0);
 
-% fname=[fname_prefix,'_Q_',num2str(round(Q_target*3600)),'m3ph_H_',...
-%     num2str(round(geo.H_target)),'m.mat']
-% save(fname,"geo");
-
+fname=[fname_prefix,'_Q_',num2str(round(Q_target*3600)),'m3ph_H_',...
+     num2str(round(geo.H_target)),'m.mat']
+ save(fname,"geo");
+ iterv_diff(iterv_i)=(geo.HH-H_target)^2; %difference square
+ iterv_Av(iterv_i)=iterv_A;
+ if (iterv_i>1)
+     iterv_diff(iterv_i)
+     iterv_diff(iterv_i-1)
+     if (iterv_diff(iterv_i)>iterv_diff(iterv_i-1))
+         %A_C=iterv_A-0.1/(N_r);
+         break
+     end
+ end
 % geo.N_r-1
+iterv_A=iterv_A+0.1;
+iterv_i=iterv_i+1;
+end
+A_C=iterv_Av(end-1)/(N_r);
+iterv_Av(end-1)
+[ff,geo]=obj(A_C,A_S,geo,1);
+figure(153)
+plot(iterv_Av,iterv_diff,'LineWidth',2)
+hold on
+plot(iterv_Av(end-1),iterv_diff(end-1),'o')
 end
 %% Defining the circulation
 function C=get_C(A_C,xi,geo)
@@ -64,7 +90,6 @@ for i=1:length(xi)
     % Parabolikus
     %C(i)=polyval(x,xi)*xi*(1-xi);
     %Elliptikus
-    C(i)=0;
     if xi(i)<0.5
         C(i)=sin(acos(1-2*xi(i)));
     else
@@ -123,7 +148,7 @@ while (delta_d_phi>0.01) && (iter<ITER_MAX)
     S=get_S(A_S,xi,geo);
     d_phi_old=geo.d_phi;
     alpha=2*pi/geo.N_lapat/2;
-    tmax=0.1;
+    tmax=0.05;
     ode_options=odeset('Events',@(t,z) streamlineevent(t,z,C,S,geo),...
         'AbsTol',1e-5);
     [ts,xsys,te,xe,ie]=ode45(@(t,z) jk_streamlineode(t,z,C,S,geo),...
@@ -155,7 +180,6 @@ while (delta_d_phi>0.01) && (iter<ITER_MAX)
 
                 figure(105)                
                 plot(geo.x_g, geo.y_g,'k',xsys(:,1),xsys(:,2),'r')
-
 
                 %pause
             else
@@ -190,6 +214,7 @@ while (delta_d_phi>0.01) && (iter<ITER_MAX)
     plot(geo.x_g, geo.y_g,'k',xsys(:,1),xsys(:,2),'r')
     title(['Q=',num2str(round(QQ*3600)),...
         'm3/h, H=',num2str(round(10*HH)/10),'m, iter #',num2str(iter)])
+    geo.d_phi';
 %pause
 if iter==ITER_MAX
     warning("Blade iteration not converging!");
@@ -200,6 +225,7 @@ end
 out=0*err1+5*err2;
 geo.C=get_C(A_C,xi,geo);
 geo.S=get_S(A_S,xi,geo);
+if (DO_PLOT==1)
         figure(100)
         subplot(2,3,[1,2,4,5])
         plot(geo.x_g, geo.y_g,'k',xsys(:,1),xsys(:,2),'r')
@@ -208,14 +234,16 @@ geo.S=get_S(A_S,xi,geo);
         plot(xx,get_C(A_C,xx,geo))
         subplot(2,3,6)
         plot(xx,get_S(A_S,xx,geo))
+end
 
-        geo_matrix=[geo.x_g(:,1),geo.y_g(:,1)]
+        geo_matrix=[geo.x_g(:,1),geo.y_g(:,1)];
         writematrix(geo_matrix,'geo_matrix.xlsx','Sheet',1)
+
 
 %% Send the geometry to postprocessing
 geo=jk_postprocess(geo);
 %save_to_CFX(geo)
-geo.t_arclength(end)
+%geo.t_arclength(end)
 
 
 

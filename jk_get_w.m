@@ -7,7 +7,7 @@ for i=1:length(xy(:,1))
         s(i)=s(i-1)+norm(dz);
     end
     r(i)=norm(z);
-    tmp=jk_vel(z,geo.C,geo.S,geo);
+    tmp=jk_rel_vel(z,geo.C,geo.S,geo);
     wx=tmp.u; wy=tmp.v;
     w_v=[wx;wy];
     w(i)=norm(w_v);
