@@ -1,4 +1,4 @@
-function lapattervezes_v15
+function lapattervezes_v16
 clear all, close all
 
 %% Main inputs
@@ -30,7 +30,6 @@ b2=0.0043;
 
 
 
-
 %Declaring the geo structure
 geo.Q_target=Q_target;
 geo.Q_source=Q_target/b2;
@@ -55,7 +54,7 @@ iterv_i=1;              %running index
 while iterv_A<6
 A_C=iterv_A/(N_r);
 A_S=0.0033e-4;
-[ff,geo]=obj(A_C,A_S,geo,0);
+[ff,geo]=obj(A_C,A_S,geo,0,iterv_A);
 
 fname=[fname_prefix,'_Q_',num2str(round(Q_target*3600)),'m3ph_H_',...
      num2str(round(geo.H_target)),'m.mat']
@@ -63,8 +62,8 @@ fname=[fname_prefix,'_Q_',num2str(round(Q_target*3600)),'m3ph_H_',...
  iterv_diff(iterv_i)=(geo.HH-H_target)^2; %difference square
  iterv_Av(iterv_i)=iterv_A;
  if (iterv_i>1)
-     iterv_diff(iterv_i)
-     iterv_diff(iterv_i-1)
+     iterv_diff(iterv_i);
+     iterv_diff(iterv_i-1);
      if (iterv_diff(iterv_i)>iterv_diff(iterv_i-1))
          %A_C=iterv_A-0.1/(N_r);
          break
@@ -75,12 +74,27 @@ iterv_A=iterv_A+0.01;
 iterv_i=iterv_i+1;
 end
 A_C=iterv_Av(end-1)/(N_r);
-iterv_Av(end-1)
-[ff,geo]=obj(A_C,A_S,geo,1);
-figure(153)
-plot(iterv_Av,iterv_diff,'LineWidth',2)
-hold on
-plot(iterv_Av(end-1),iterv_diff(end-1),'o')
+iterv_Av(end-1);
+[ff,geo]=obj(A_C,A_S,geo,1,iterv_A);
+%%
+%save_to_CFX(geo)
+jk_postprocess(geo);
+
+%%
+
+% figure(153)
+% plot(iterv_Av,iterv_diff,'LineWidth',2)
+% hold on
+% plot(iterv_Av(end-1),iterv_diff(end-1),'*','MarkerSize',12,'LineWidth',1.5, ...
+%     'Color', [0.8500 0.3250 0.0980])
+% for iterii=2:15:62
+% plot(iterv_Av(iterii),iterv_diff(iterii),'*','MarkerSize',12,'LineWidth',1.5, ...
+%     'Color', [0.4660 0.6740 0.1880])
+% end
+% xlabel('A_g') 
+% ylabel('(H-H_{terv})^2 (m^2)') 
+
+
 end
 %% Defining the circulation
 function C=get_C(A_C,xi,geo)
@@ -104,6 +118,11 @@ for i=1:length(xi)
     Int_C=Int_C+C(i)*(xi(i)-xi(i-1));
     end
 end
+% figure(109)
+% subplot(2,3,6)
+% plot (xi,C,'-o','LineWidth',2)
+% ylabel('\Gamma_0') 
+% xlabel('\xi') 
 %Gamma_r=Int_C*geo.t_arclength(end)*A_C/geo.b2
 %Gamma_r/geo.Gamma_lapat_elm
 %A=9.81*geo.H_target*2*pi*geo.b2/geo.N_lapat/geo.omega/geo.t_arclength(end)/Int_C
@@ -140,12 +159,13 @@ S=S*A;
 end
 
 %% Iteration
-function [out,geo]=obj(A_C,A_S,geo,DO_PLOT)
+function [out,geo]=obj(A_C,A_S,geo,DO_PLOT,iterv_A)
 xi=geo.loc_c/geo.t_arclength(end);
 
 delta_d_phi=1e5;
 iter=1;
 ITER_MAX=50;
+iter_k=1;
 while (delta_d_phi>0.01) && (iter<ITER_MAX)
     C=get_C(A_C,xi,geo);
     S=get_S(A_S,xi,geo);
@@ -181,8 +201,9 @@ while (delta_d_phi>0.01) && (iter<ITER_MAX)
                 warning('!!!!!!!!!!\n dr not found, replacing by 15 degrees');
                 ie'
 
-                figure(105)                
+                figure(105) 
                 plot(geo.x_g, geo.y_g,'k',xsys(:,1),xsys(:,2),'r')
+                axis('equal')
 
                 %pause
             else
@@ -215,9 +236,46 @@ while (delta_d_phi>0.01) && (iter<ITER_MAX)
     figure(105)
 
     plot(geo.x_g, geo.y_g,'k',xsys(:,1),xsys(:,2),'r')
-    title(['Q=',num2str(round(QQ*3600)),...
-        'm3/h, H=',num2str(round(10*HH)/10),'m, iter #',num2str(iter)])
+    title(['Q=',num2str(round(QQ*60000)),...
+        'l/min, H=',num2str(round(10*HH)/10),'m, iter #',num2str(iter)])
     geo.d_phi';
+    axis('equal')
+
+    % if (iterv_A==0 && rem(iter_k,2)==1)
+    %     figure(107)
+    %     subplot(2,3,(iter_k+1)/2)
+    %     plot(geo.x_g, geo.y_g,'k',xsys(:,1),xsys(:,2),'r')
+    %     title(iter_k+". iteráció")
+    %     axis('equal')
+    % else if (iterv_A==0 && iter_k==10)
+    %     figure(107)
+    %     subplot(2,3,(iter_k+2)/2)
+    %     plot(geo.x_g, geo.y_g,'k',xsys(:,1),xsys(:,2),'r')
+    %     title(iter_k+". iteráció")
+    %     axis('equal')
+    % end
+    % end
+
+    % if (round(rem(iterv_A*100,15))==2)
+    %     iterv_A*100
+    %     (iterv_A*100-2)/15+1
+    %     figure(108)
+    %     subplot(2,3,round((iterv_A*100-2)/15+1))
+    %     plot(geo.x_g, geo.y_g,'k',xsys(:,1),xsys(:,2),'r')
+    %     title(iterv_A*100+". lépés, A_g="+iterv_A)
+    %     axis('equal')
+    % end
+    % if (round(iterv_A*100)==66)
+    %     figure(108)
+    %     subplot(2,3,6)
+    %     plot(geo.x_g, geo.y_g,'k',xsys(:,1),xsys(:,2),'r')
+    %     title(iterv_A*100+". lépés, A_g="+iterv_A)
+    %     axis('equal')
+    % end
+
+
+
+iter_k=iter_k+1;
 %pause
 if iter==ITER_MAX
     warning("Blade iteration not converging!");
@@ -244,12 +302,10 @@ end
 
 
 %% Send the geometry to postprocessing
+%%ITT
 %geo=jk_postprocess(geo);
 %save_to_CFX(geo)
 %geo.t_arclength(end)
-
-
-
 end
 
 

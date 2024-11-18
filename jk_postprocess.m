@@ -1,4 +1,4 @@
-function geo=jk_postprocess(geo)
+function jk_postprocess(geo)
     % figure(123),clf, hold on
     % subplot(2,3,[1,2,4,5])
     % 
@@ -239,9 +239,42 @@ function geo=jk_postprocess(geo)
 %     [0 tmax],[R0*cos(alpha);R0*sin(alpha)],ode_options); %DE megoldó
 % 
 % 
-% if DO_PLOT==1
-    figure(5)
-    subplot(2,2,[1,3])
+%if DO_PLOT==1
+    % figure(5)
+    % subplot(2,2,[1,3])
+    % plot(geo.x_g,geo.y_g,'k','LineWidth',1)
+    % axis('equal')
+    % hold on
+    % r_b=geo.Db/2;
+    % r_k=geo.D2/2;
+    % 
+    % ode_options=odeset('Events',@(t,z) jk_streamlineevent2(t,z,geo.C,geo.S,geo));
+    % alpha=15*pi/180;
+    % [t_s,xsys_s,tes,xes,ies]=ode45(@(t,z) jk_streamlineode(t,z,geo.C,geo.S,geo),...
+    %     [0 0.05],[r_b*cos(alpha);r_b*sin(alpha)],ode_options); %DE megoldó
+    % plot(xsys_s(:,1),xsys_s(:,2),'r','LineWidth',2);
+    % 
+    % alpha=-10*pi/180;
+    % [t_n,xsys_n,ten,xen,ien]=ode45(@(t,z) jk_streamlineode(t,z,geo.C,geo.S,geo),...
+    %     [0 0.05],[r_b*cos(alpha);r_b*sin(alpha)],ode_options); %DE megoldó
+    % plot(xsys_n(:,1),xsys_n(:,2),'g','LineWidth',2);
+    % 
+    % [s_s,r_s,w_s,p_s,p_cp]=jk_get_w(xsys_s,geo);
+    % [s_n,r_n,w_n,p_n,p_cp]=jk_get_w(xsys_n,geo);
+    % 
+    % fi_ini=pi*linspace(0,360,100)/180;
+    % ode_options=odeset('Events',@(t,z) jk_streamlineevent2(t,z,geo.C,geo.S,geo));
+    % for ii=1:length(fi_ini)
+    %     xini=r_b*cos(fi_ini(ii));
+    %     yini=r_b*sin(fi_ini(ii));
+    %     [ts,xsys]=ode45(@(t,z) jk_streamlineode(t,z,geo.C,geo.S,geo),...
+    %         [0 0.05],[xini;yini],ode_options); %DE megoldó
+    % 
+    %     plot(xsys(:,1),xsys(:,2),'b');
+    % end
+
+    figure(8)
+    subplot(2,3,[1,2,4,5])
     plot(geo.x_g,geo.y_g,'k','LineWidth',1)
     axis('equal')
     hold on
@@ -249,20 +282,20 @@ function geo=jk_postprocess(geo)
     r_k=geo.D2/2;
 
     ode_options=odeset('Events',@(t,z) jk_streamlineevent2(t,z,geo.C,geo.S,geo));
-    alpha=30*pi/180;
+    alpha=15*pi/180;
     [t_s,xsys_s,tes,xes,ies]=ode45(@(t,z) jk_streamlineode(t,z,geo.C,geo.S,geo),...
         [0 0.05],[r_b*cos(alpha);r_b*sin(alpha)],ode_options); %DE megoldó
-    plot(xsys_s(:,1),xsys_s(:,2),'r','LineWidth',2);
+    %plot(xsys_s(:,1),xsys_s(:,2),'r','LineWidth',2);
 
-    alpha=-30*pi/180;
+    alpha=-10*pi/180;
     [t_n,xsys_n,ten,xen,ien]=ode45(@(t,z) jk_streamlineode(t,z,geo.C,geo.S,geo),...
         [0 0.05],[r_b*cos(alpha);r_b*sin(alpha)],ode_options); %DE megoldó
-    plot(xsys_n(:,1),xsys_n(:,2),'g','LineWidth',2);
+    %plot(xsys_n(:,1),xsys_n(:,2),'g','LineWidth',2);
 
     [s_s,r_s,w_s,p_s,p_cp]=jk_get_w(xsys_s,geo);
     [s_n,r_n,w_n,p_n,p_cp]=jk_get_w(xsys_n,geo);
 
-    fi_ini=pi*linspace(0,360,100)/180;
+    fi_ini=pi*linspace(10,35,10)/180;
     ode_options=odeset('Events',@(t,z) jk_streamlineevent2(t,z,geo.C,geo.S,geo));
     for ii=1:length(fi_ini)
         xini=r_b*cos(fi_ini(ii));
@@ -272,6 +305,31 @@ function geo=jk_postprocess(geo)
 
         plot(xsys(:,1),xsys(:,2),'b');
     end
+
+    vecabs=sqrt(geo.x_g(end,1)^2+geo.y_g(end,1)^2)
+    for plotii=1:1:8
+    tmpu=geo.u2/250;
+    tmpc2m=geo.QQ/geo.D2/pi/geo.b2/250;
+    tmpc2u=geo.HH*9.81/geo.u2/250;
+    p1=[geo.x_g(end,plotii) geo.y_g(end,plotii)];
+    %p2=[geo.x_g(end,1)-geo.y_g(end,1)*tmpu/vecabs geo.y_g(end,1)+geo.x_g(end,1)*tmpu/vecabs];
+    p2=p1+[-geo.y_g(end,plotii)*tmpu/vecabs geo.x_g(end,plotii)*tmpu/vecabs];
+    p3=p2;
+    p3=p3-[-geo.y_g(end,plotii)*tmpc2u/vecabs geo.x_g(end,plotii)*tmpc2u/vecabs];
+    p3=p3+[geo.x_g(end,plotii)*tmpc2m/vecabs geo.y_g(end,plotii)*tmpc2m/vecabs];
+    dpu = p1-p2;                         % Difference
+    dpc = p3-p2;
+    dpw = p3-p1;
+    quiver(p2(1),p2(2),dpc(1),dpc(2),0,'MaxHeadSize',0.7 ...
+        ,'LineWidth',2,'Color',[0.8500 0.3250 0.0980])
+
+    quiver(p1(1),p1(2),dpw(1),dpw(2),0,'MaxHeadSize',0.9 ...
+        ,'LineWidth',2,'Color',[0.4660 0.6740 0.1880])
+
+    quiver(p2(1),p2(2),dpu(1),dpu(2),0,'MaxHeadSize',0.4 ...
+        ,'LineWidth',2,'Color',[0 0.4470 0.7410])
+    end
+    
 
 
 
@@ -288,18 +346,53 @@ function geo=jk_postprocess(geo)
 
     hold off
 
-    subplot(2,2,2)
+    subplot(2,3,3)
     u2=geo.D2/2*geo.omega;
     plot(2*r_s/geo.Db,w_s/u2,'r'), hold on
     plot(2*r_n/geo.Db,w_n/u2,'b')
     xlim([1,max(2*r_s/geo.Db)])
     xlabel('r/D_1'), ylabel('w/u_2'), legend('szívott oldal','nyomott oldal')
 
-    subplot(2,2,4)
+    subplot(2,3,6)
     plot(s_s,p_s,'r'), hold on
     plot(s_n,p_n,'b')
     xlabel('Áramvonal ívhossz'), ylabel('p'), legend('szívott oldal','nyomott oldal')
 % 
+%%%%%%%%%%%%%%%%%%%% Just to TDK
+    % figure(6)
+    % clf
+    % plot(geo.x_g,geo.y_g,'k','LineWidth',1)
+    % axis('equal')
+    % hold on
+    % r_b=geo.Db/2;
+    % r_k=geo.D2/2;
+    % 
+    % ode_options=odeset('Events',@(t,z) jk_streamlineevent2(t,z,geo.C,geo.S,geo));
+    % alpha=30*pi/180;
+    % [t_s,xsys_s,tes,xes,ies]=ode45(@(t,z) jk_streamlineode(t,z,geo.C,geo.S,geo),...
+    %     [0 0.05],[r_b*cos(alpha);r_b*sin(alpha)],ode_options); %DE megoldó
+    % plot(xsys_s(:,1),xsys_s(:,2),'r','LineWidth',2);
+    % 
+    % alpha=-30*pi/180;
+    % [t_n,xsys_n,ten,xen,ien]=ode45(@(t,z) jk_streamlineode(t,z,geo.C,geo.S,geo),...
+    %     [0 0.05],[r_b*cos(alpha);r_b*sin(alpha)],ode_options); %DE megoldó
+    % plot(xsys_n(:,1),xsys_n(:,2),'g','LineWidth',2);
+    % 
+    % [s_s,r_s,w_s,p_s,p_cp]=jk_get_w(xsys_s,geo);
+    % [s_n,r_n,w_n,p_n,p_cp]=jk_get_w(xsys_n,geo);
+    % 
+    % fi_ini=pi*linspace(0,360,100)/180;
+    % ode_options=odeset('Events',@(t,z) jk_streamlineevent2(t,z,geo.C,geo.S,geo));
+    % for ii=1:length(fi_ini)
+    %     xini=r_b*cos(fi_ini(ii));
+    %     yini=r_b*sin(fi_ini(ii));
+    %     [ts,xsys]=ode45(@(t,z) jk_streamlineode(t,z,geo.C,geo.S,geo),...
+    %         [0 0.05],[xini;yini],ode_options); %DE megoldó
+    % 
+    %     plot(xsys(:,1),xsys(:,2),'b');
+    % end
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 %% Interpolacio
 xxp=linspace(0,1);
 pps=interp1(s_s/s_s(end),p_s,xxp);
@@ -332,19 +425,25 @@ deltapt=ppnt-ppst;
 
 
 
-figure(201)
-plot(xxp,pps-ppn(end),'r','LineWidth',2)
-hold on
-plot(xxp,ppst-ppnt(end-1),'r--','LineWidth',2)
-hold on
-plot(xxp,ppn-ppn(end),'b','LineWidth',2)
-hold on
-plot(xxp,ppnt-ppnt(end-1),'b--','LineWidth',2)
-xlabel('Áramvonal ívhossz'), ylabel('p'), ...
-    legend('Szívott oldal analitikus','Szívott oldal numerikus',...
-    'Nyomott oldal analitikus','Nyomott oldal numerikus')
-set(gca,'fontsize',14)
-
+% figure(201)
+% plot(xxp,pps-ppn(end),'r','LineWidth',2)
+% hold on
+% % plot(xxp,ppst-ppnt(end-1),'r--','LineWidth',2)
+% hold on
+% plot(xxp,ppn-ppn(end),'b','LineWidth',2)
+% hold on
+% % plot(xxp,ppnt-ppnt(end-1),'b--','LineWidth',2)
+% xlabel('Áramvonal ívhossz'), ylabel('p'), ...
+%     legend('Szívott oldal', 'Nyomott oldal')
+% set(gca,'fontsize',14)
+% 
+% figure(202)
+% clf
+% u2=geo.D2/2*geo.omega;
+% plot(2*r_s/geo.Db,w_s/u2,'r'), hold on
+% plot(2*r_n/geo.Db,w_n/u2,'b')
+% xlim([1,max(2*r_s/geo.Db)])
+% xlabel('r/D_1'), ylabel('w/u_2'), legend('szívott oldal','nyomott oldal')
 
 
 
